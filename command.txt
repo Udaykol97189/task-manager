@@ -1,0 +1,49 @@
+Get-ChildItem backend/app -Recurse -File | Select-Object FullName
+
+
+Get-Content backend/app/db/database.py
+Get-Content backend/app/models/task.py
+Get-Content backend/app/schemas/task.py
+Get-Content backend/app/services/task_service.py
+
+
+
+python -m compileall backend/app
+
+Get-Content backend/app/schemas/task.py
+
+
+
+
+docker exec -it task_manager_postgres psql -U task_manager -d task_manager
+
+
+
+docker ps -a --filter "name=task_manager_postgres"
+
+docker logs task_manager_postgres --tail 50
+
+
+
+
+docker compose up -d
+
+docker compose ps
+
+
+docker exec -it task_manager_postgres psql -U task_manager -d task_manager
+
+
+
+docker compose up -d
+docker compose ps
+
+
+.\backend\.venv\Scripts\Activate.ps1
+
+
+docker exec -it task_manager_postgres psql -U task_manager -d task_manager
+
+
+cd backend
+uvicorn app.main:app --reload
