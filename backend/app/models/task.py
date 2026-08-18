@@ -36,6 +36,12 @@ class Task(Base):
         nullable=False,
     )
 
+    priority: Mapped[int] = mapped_column(
+        Integer,
+        default=1,
+        nullable=False,
+    )
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,

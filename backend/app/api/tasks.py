@@ -8,6 +8,7 @@ from app.services.task_service import (
     get_task,
     get_tasks,
     update_task,
+    delete_task
 )
 
 router = APIRouter(
@@ -62,3 +63,18 @@ def update_task_endpoint(
         )
 
     return update_task(db, task, task_data)
+
+@router.delete("/{task_id}", status_code=204)
+def delete_task_endpoint(
+    task_id: int,
+    db: Session = Depends(get_db),
+):
+    task = get_task(db, task_id)
+
+    if task is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found",
+        )
+
+    delete_task(db, task)
