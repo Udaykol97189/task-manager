@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.models.task import Task
 from app.schemas.task import TaskCreate, TaskUpdate
-
+from app.exceptions.task_exceptions import TaskNotFoundError
 from app.repositories.task_repository import (
     create,
     delete,
@@ -26,8 +26,22 @@ def get_tasks(db: Session) -> list[Task]:
     return get_all(db)
 
 
-def get_task(db: Session, task_id: int) -> Task | None:
-    return get_by_id(db, task_id)
+def get_task(db: Session, task_id: int) -> Task:
+    task = get_by_id(db, task_id)
+
+    if task is None:
+        raise TaskNotFoundError(f"Task {task_id} not found")
+
+    return task
+
+
+def apply_task_updates(task: Task, task_data: TaskUpdate) -> Task:
+    update_data = task_data.model_dump(exclude_unset=True)
+
+    for field, value in update_data.items():
+        setattr(task, field, value)
+
+    return task
 
 
 def update_task(
@@ -35,10 +49,7 @@ def update_task(
     task: Task,
     task_data: TaskUpdate,
 ) -> Task:
-    update_data = task_data.model_dump(exclude_unset=True)
-
-    for field, value in update_data.items():
-        setattr(task, field, value)
+    task = apply_task_updates(task, task_data)
 
     return update(db, task)
 
