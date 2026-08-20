@@ -154,3 +154,159 @@ def test_update_task_validation(client):
     )
 
     assert response.status_code == 422
+
+def test_get_tasks_pagination(client):
+    for i in range(5):
+        response = client.post(
+            "/tasks/",
+            json={
+                "title": f"Pagination Task {i}",
+                "priority": 1,
+            },
+        )
+
+        assert response.status_code == 200
+
+    response = client.get("/tasks/?skip=0&limit=2")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 2
+    assert data[0]["title"] == "Pagination Task 4"
+    assert data[1]["title"] == "Pagination Task 3"
+
+
+def test_get_tasks_pagination_second_page(client):
+    for i in range(5):
+        response = client.post(
+            "/tasks/",
+            json={
+                "title": f"Pagination Task {i}",
+                "priority": 1,
+            },
+        )
+
+        assert response.status_code == 200
+
+    response = client.get("/tasks/?skip=2&limit=2")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 2
+    assert data[0]["title"] == "Pagination Task 2"
+    assert data[1]["title"] == "Pagination Task 1"
+
+
+def test_get_tasks_invalid_limit(client):
+    response = client.get("/tasks/?limit=101")
+
+    assert response.status_code == 422
+
+def test_filter_tasks_by_completed(client):
+    completed_task = client.post(
+        "/tasks/",
+        json={
+            "title": "Completed task",
+            "priority": 1,
+        },
+    ).json()
+
+    client.patch(
+        f"/tasks/{completed_task['id']}",
+        json={"completed": True},
+    )
+
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Pending task",
+            "priority": 1,
+        },
+    )
+
+    response = client.get("/tasks/?completed=true")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["title"] == "Completed task"
+    assert data[0]["completed"] is True
+
+def test_filter_tasks_by_priority(client):
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Low priority",
+            "priority": 1,
+        },
+    )
+
+    client.post(
+        "/tasks/",
+        json={
+            "title": "High priority",
+            "priority": 3,
+        },
+    )
+
+    response = client.get("/tasks/?priority=3")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["title"] == "High priority"
+    assert data[0]["priority"] == 3
+
+def test_filter_tasks_by_completed_and_priority(client):
+    first = client.post(
+        "/tasks/",
+        json={
+            "title": "Completed high priority",
+            "priority": 3,
+        },
+    ).json()
+
+    client.patch(
+        f"/tasks/{first['id']}",
+        json={"completed": True},
+    )
+
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Pending high priority",
+            "priority": 3,
+        },
+    )
+
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Completed low priority",
+            "priority": 1,
+        },
+    )
+
+    response = client.get(
+        "/tasks/?completed=true&priority=3"
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["title"] == "Completed high priority"
+
+def test_filter_tasks_invalid_priority(client):
+    response = client.get("/tasks/?priority=5")
+
+    assert response.status_code == 422

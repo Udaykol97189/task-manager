@@ -1,5 +1,5 @@
 from app.models.task import Task
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -32,12 +32,31 @@ def create_task_endpoint(
 ):
     return create_task(db, task_data)
 
-
 @router.get("/", response_model=list[TaskResponse])
 def get_tasks_endpoint(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
+    completed: bool | None = None,
+    priority: int | None = Query(default=None, ge=1, le=3),
+    sort_by: str = Query(
+        default="created_at",
+        pattern="^(created_at|updated_at|priority|title)$",
+    ),
+    sort_order: str = Query(
+        default="desc",
+        pattern="^(asc|desc)$",
+    ),
     db: Session = Depends(get_db),
 ):
-    return get_tasks(db)
+    return get_tasks(
+        db,
+        skip,
+        limit,
+        completed,
+        priority,
+        sort_by,
+        sort_order,
+    )
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
