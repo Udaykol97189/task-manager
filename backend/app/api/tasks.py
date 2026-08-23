@@ -1,6 +1,6 @@
-from app.models.task import Task
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from typing import Literal
 
 from app.db.database import get_db
 from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
@@ -17,13 +17,6 @@ router = APIRouter(
     tags=["Tasks"],
 )
 
-def apply_task_updates(task: Task, task_data: TaskUpdate) -> Task:
-    update_data = task_data.model_dump(exclude_unset=True)
-
-    for field, value in update_data.items():
-        setattr(task, field, value)
-
-    return task
 
 @router.post("/", response_model=TaskResponse)
 def create_task_endpoint(
@@ -35,9 +28,29 @@ def create_task_endpoint(
 
 @router.get("/", response_model=list[TaskResponse])
 def get_tasks_endpoint(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
+    completed: bool | None = None,
+    priority: int | None = None,
+    sort_by: Literal[
+        "created_at",
+        "updated_at",
+        "priority",
+        "title",
+        "completed",
+    ] = "created_at",
+    sort_order: Literal["asc", "desc"] = "desc",
     db: Session = Depends(get_db),
 ):
-    return get_tasks(db)
+    return get_tasks(
+        db,
+        skip=skip,
+        limit=limit,
+        completed=completed,
+        priority=priority,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )    
 
 
 @router.get("/{task_id}", response_model=TaskResponse)

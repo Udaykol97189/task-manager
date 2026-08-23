@@ -22,8 +22,24 @@ def create_task(db: Session, task_data: TaskCreate) -> Task:
     return create(db, task)
 
 
-def get_tasks(db: Session) -> list[Task]:
-    return get_all(db)
+def get_tasks(
+    db: Session,
+    skip: int = 0,
+    limit: int = 20,
+    completed: bool | None = None,
+    priority: int | None = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+) -> list[Task]:
+    return get_all(
+        db,
+        skip=skip,
+        limit=limit,
+        completed=completed,
+        priority=priority,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
 
 
 def get_task(db: Session, task_id: int) -> Task:
