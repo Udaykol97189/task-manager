@@ -154,3 +154,159 @@ def test_update_task_validation(client):
     )
 
     assert response.status_code == 422
+
+def test_filter_tasks_by_completed(client):
+    client.post(
+        "/tasks/",
+        json={"title": "Incomplete task", "priority": 1},
+    )
+
+    create_response = client.post(
+        "/tasks/",
+        json={"title": "Completed task", "priority": 2},
+    )
+
+    task_id = create_response.json()["id"]
+
+    client.patch(
+        f"/tasks/{task_id}",
+        json={"completed": True},
+    )
+
+    response = client.get("/tasks/?completed=true")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["completed"] is True
+
+
+def test_filter_tasks_by_priority(client):
+    client.post(
+        "/tasks/",
+        json={"title": "Low priority", "priority": 1},
+    )
+
+    client.post(
+        "/tasks/",
+        json={"title": "High priority", "priority": 3},
+    )
+
+    response = client.get("/tasks/?priority=3")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["priority"] == 3
+
+
+def test_task_pagination(client):
+    for i in range(5):
+        client.post(
+            "/tasks/",
+            json={
+                "title": f"Task {i}",
+                "priority": 1,
+            },
+        )
+
+    response = client.get("/tasks/?skip=1&limit=2")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 2
+
+
+def test_task_sorting_ascending(client):
+    client.post(
+        "/tasks/",
+        json={"title": "Priority 3", "priority": 3},
+    )
+
+    client.post(
+        "/tasks/",
+        json={"title": "Priority 1", "priority": 1},
+    )
+
+    client.post(
+        "/tasks/",
+        json={"title": "Priority 2", "priority": 2},
+    )
+
+    response = client.get(
+        "/tasks/?sort_by=priority&sort_order=asc"
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    priorities = [task["priority"] for task in data]
+
+    assert priorities == [1, 2, 3]
+
+
+def test_task_sorting_descending(client):
+    client.post(
+        "/tasks/",
+        json={"title": "Priority 1", "priority": 1},
+    )
+
+    client.post(
+        "/tasks/",
+        json={"title": "Priority 3", "priority": 3},
+    )
+
+    client.post(
+        "/tasks/",
+        json={"title": "Priority 2", "priority": 2},
+    )
+
+    response = client.get(
+        "/tasks/?sort_by=priority&sort_order=desc"
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    priorities = [task["priority"] for task in data]
+
+    assert priorities == [3, 2, 1]
+
+def test_invalid_sort_field(client):
+    response = client.get(
+        "/tasks/?sort_by=password"
+    )
+
+    assert response.status_code == 422
+
+
+def test_invalid_sort_order(client):
+    response = client.get(
+        "/tasks/?sort_order=invalid"
+    )
+
+    assert response.status_code == 422
+
+
+def test_invalid_limit(client):
+    response = client.get(
+        "/tasks/?limit=101"
+    )
+
+    assert response.status_code == 422
+
+
+def test_invalid_skip(client):
+    response = client.get(
+        "/tasks/?skip=-1"
+    )
+
+    assert response.status_code == 422
