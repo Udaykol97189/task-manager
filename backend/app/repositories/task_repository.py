@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.task import Task
@@ -22,6 +23,7 @@ def get_all(
     limit: int = 20,
     completed: bool | None = None,
     priority: int | None = None,
+    search: str | None = None,
     sort_by: str = "created_at",
     sort_order: str = "desc",
 ) -> list[Task]:
@@ -32,6 +34,16 @@ def get_all(
 
     if priority is not None:
         query = query.filter(Task.priority == priority)
+
+    if search:
+        search_pattern = f"%{search}%"
+
+        query = query.filter(
+            or_(
+                Task.title.ilike(search_pattern),
+                Task.description.ilike(search_pattern),
+            )
+        )
 
     VALID_SORT_FIELDS = {
         "created_at",

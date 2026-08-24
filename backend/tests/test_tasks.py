@@ -319,3 +319,178 @@ def test_get_nonexistent_task(client):
     assert response.json() == {
         "detail": "Task 999999 not found"
     }
+
+def test_search_tasks_by_title(client):
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Learn Python",
+            "description": "Backend development",
+            "priority": 1,
+        },
+    )
+
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Learn Docker",
+            "description": "Containerization",
+            "priority": 2,
+        },
+    )
+
+    response = client.get("/tasks/?search=Python")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["title"] == "Learn Python"
+
+
+def test_search_tasks_by_description(client):
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Backend project",
+            "description": "Build FastAPI application",
+            "priority": 1,
+        },
+    )
+
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Frontend project",
+            "description": "Build React application",
+            "priority": 2,
+        },
+    )
+
+    response = client.get("/tasks/?search=FastAPI")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["title"] == "Backend project"
+
+
+def test_search_tasks_no_match(client):
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Learn Python",
+            "description": "Backend development",
+            "priority": 1,
+        },
+    )
+
+    response = client.get("/tasks/?search=Java")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_search_tasks_with_priority_filter(client):
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Python Beginner",
+            "description": "Learn Python basics",
+            "priority": 1,
+        },
+    )
+
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Python Advanced",
+            "description": "Advanced Python",
+            "priority": 3,
+        },
+    )
+
+    response = client.get(
+        "/tasks/?search=Python&priority=3"
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["title"] == "Python Advanced"
+    assert data[0]["priority"] == 3
+
+def test_search_with_completed_filter(client):
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Python incomplete",
+            "description": "Learn Python",
+            "priority": 1,
+        },
+    )
+
+    create_response = client.post(
+        "/tasks/",
+        json={
+            "title": "Python completed",
+            "description": "Practice Python",
+            "priority": 2,
+        },
+    )
+
+    task_id = create_response.json()["id"]
+
+    client.patch(
+        f"/tasks/{task_id}",
+        json={"completed": True},
+    )
+
+    response = client.get(
+        "/tasks/?search=Python&completed=true"
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["title"] == "Python completed"
+    assert data[0]["completed"] is True
+
+
+def test_search_with_sorting(client):
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Python Low",
+            "description": "Python task",
+            "priority": 1,
+        },
+    )
+
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Python High",
+            "description": "Python task",
+            "priority": 3,
+        },
+    )
+
+    response = client.get(
+        "/tasks/?search=Python&sort_by=priority&sort_order=desc"
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 2
+    assert data[0]["priority"] == 3
+    assert data[1]["priority"] == 1
