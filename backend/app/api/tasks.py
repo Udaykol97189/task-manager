@@ -18,7 +18,7 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=TaskResponse)
+@router.post("/", response_model=TaskResponse, status_code=201)
 def create_task_endpoint(
     task_data: TaskCreate,
     db: Session = Depends(get_db),

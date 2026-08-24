@@ -33,6 +33,17 @@ def get_all(
     if priority is not None:
         query = query.filter(Task.priority == priority)
 
+    VALID_SORT_FIELDS = {
+        "created_at",
+        "updated_at",
+        "priority",
+        "title",
+        "completed",
+    }
+
+    if sort_by not in VALID_SORT_FIELDS:
+        raise ValueError(f"Invalid sort field: {sort_by}")
+
     sort_column = getattr(Task, sort_by)
 
     if sort_order == "asc":

@@ -23,7 +23,7 @@ def test_create_task(client):
         },
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     data = response.json()
 
@@ -70,7 +70,7 @@ def test_update_task(client):
         },
     )
 
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
 
     task_id = create_response.json()["id"]
 
@@ -103,7 +103,7 @@ def test_delete_task(client):
         },
     )
 
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
 
     task_id = create_response.json()["id"]
 
@@ -142,7 +142,7 @@ def test_update_task_validation(client):
         },
     )
 
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
 
     task_id = create_response.json()["id"]
 
@@ -310,3 +310,12 @@ def test_invalid_skip(client):
     )
 
     assert response.status_code == 422
+
+
+def test_get_nonexistent_task(client):
+    response = client.get("/tasks/999999")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task 999999 not found"
+    }
