@@ -28,6 +28,7 @@ def get_tasks(
     limit: int = 20,
     completed: bool | None = None,
     priority: int | None = None,
+    search: str | None = None,
     sort_by: str = "created_at",
     sort_order: str = "desc",
 ) -> list[Task]:
@@ -37,10 +38,10 @@ def get_tasks(
         limit=limit,
         completed=completed,
         priority=priority,
+        search=search,
         sort_by=sort_by,
         sort_order=sort_order,
     )
-
 
 def get_task(db: Session, task_id: int) -> Task:
     task = get_by_id(db, task_id)

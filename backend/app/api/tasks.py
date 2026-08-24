@@ -18,7 +18,7 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=TaskResponse)
+@router.post("/", response_model=TaskResponse, status_code=201)
 def create_task_endpoint(
     task_data: TaskCreate,
     db: Session = Depends(get_db),
@@ -32,6 +32,7 @@ def get_tasks_endpoint(
     limit: int = Query(default=20, ge=1, le=100),
     completed: bool | None = None,
     priority: int | None = None,
+    search: str | None = Query(default=None, min_length=1),
     sort_by: Literal[
         "created_at",
         "updated_at",
@@ -48,6 +49,7 @@ def get_tasks_endpoint(
         limit=limit,
         completed=completed,
         priority=priority,
+        search=search,
         sort_by=sort_by,
         sort_order=sort_order,
     )    
