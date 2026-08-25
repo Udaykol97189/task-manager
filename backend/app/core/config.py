@@ -1,17 +1,17 @@
-import os
+from pathlib import Path
 
-from dotenv import load_dotenv
-
-
-load_dotenv()
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings:
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "")
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
-    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
-    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
+BASE_DIR = Path(__file__).resolve().parents[3]
+
+
+class Settings(BaseSettings):
+    POSTGRES_DB: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5432
 
     @property
     def DATABASE_URL(self) -> str:
@@ -20,6 +20,12 @@ class Settings:
             f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"
             f"{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
+
+    model_config = SettingsConfigDict(
+        env_file=BASE_DIR / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 
 settings = Settings()

@@ -106,3 +106,21 @@ docker exec -it task_manager_postgres psql -U task_manager -d task_manager
 
 
 .\.venv\Scripts\Activate.ps1
+
+
+Get-ChildItem Env: | Where-Object {$_.Name -match "proxy"}
+
+
+[Environment]::GetEnvironmentVariables("User").GetEnumerator() | Where-Object { $_.Key -match "proxy" }
+
+
+
+[Environment]::GetEnvironmentVariables("Machine").GetEnumerator() | Where-Object { $_.Key -match "proxy" }
+
+
+
+Get-ChildItem "$env:APPDATA\Docker" -Recurse -File -ErrorAction SilentlyContinue |Select-String -Pattern "http.docker.internal|https.docker.internal|proxy" -SimpleMatch
+
+
+Get-Content backend\requirements.txt
+Get-ChildItem "$env:LOCALAPPDATA\Docker\log" -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "proxy|http" } | Select-Object FullName
